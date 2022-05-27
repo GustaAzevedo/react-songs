@@ -1,69 +1,64 @@
-import { PlayArrow, QueueMusic } from '@mui/icons-material';
-import { Card, CardActions, CardContent, CardMedia, IconButton, Typography } from '@mui/material'
-import React from 'react'
+import { PlayArrow, QueueMusic, Pause } from '@mui/icons-material';
+import { Card, CardActions, CardContent, CardMedia, IconButton, Typography } from '@mui/material';
+import React from 'react';
+import { useSubscription } from '@apollo/client'
+import { GET_SONGS } from '../graphql/subscription';
+import { SongContext } from '../App';
 
-import {useQuery } from '@apollo/client'
-import { GET_SONGS } from '../graphql/quejy';
+export default function ListaMusica({ queue }){
+    const { data, loading, error } = useSubscription(GET_SONGS);
 
-
-
-export default function ListaMusica() {
-
-    const { data , loading, error } = useQuery(GET_SONGS);
-
-    if(loading){
+    if(loading) {
         return <div>Carregando...</div>
     }
 
-    if(error){
-        console.log(error)
-        return <div>Deu um erro ai</div>
+    if(error) {
+        console.log(error);
+        return <div>ERRO</div>;
     }
 
-    const musicaFake = {
-        titulo: 'Titulo da Musica',
-        artista: 'Artista da musica',
-        imagem: 'https://pbs.twimg.com/profile_images/1217784855368470531/epouecHA_400x400.jpg'
-    }
+    function Musica({musica}){
+        const {thumbnail, artist, title} = musica;
+        const [isCurrentSong, setIsCurrentSong] = React.useState(false);
+        const { currentSong, songDispatch } = React.useContext(SongContext);
 
+        React.useEffect(()=>{
+            setIsCurrentSong(currentSong.song.id === musica.id && currentSong.isPlaying)
+        },[currentSong.song.id, currentSong.isPlaying])
 
-    function Musica({ musica }) {
-        const { thumbnail, artist,  title} = musica;
+        function handleChangeSong(){
+            songDispatch({ type: "CHANGE_SONG", payload: { musica } });
+            songDispatch({ type: isCurrentSong ? "PAUSE_SONG" : "PLAY_SONG" });
+        }
 
-        return (
-            <Card style={{ display: 'flex', alignItems: 'center', margin: '10px'}}>
+        function handleAddQueue(){
+            queue.queueDispatch({ type: "ADD_QUEUE", payload: { musica } });
+        }
 
-                <CardMedia image={thumbnail} style={{ objectFit: 'cover', width: '140px', height: '140px' }} />
+        return (<Card style={{ display:'flex', alignItems: 'center', margin: '10px' }}>
+                <CardMedia image={thumbnail} style={{ objectFit: 'cover', width: '140px', height:'140px' }}/>
                 <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
                     <CardContent>
-                        <Typography variant='h5' component="h2" >{title}</Typography>
+                        <Typography variant='h5' component="h2">{title}</Typography>
                         <Typography variant='subtitle1' component="h3">{artist}</Typography>
-
                     </CardContent>
                     <CardActions>
-                        <IconButton><PlayArrow color="secondary" /></IconButton>
-                        <IconButton><QueueMusic color="secondary" /></IconButton>
-
+                        <IconButton onClick={handleChangeSong}>
+                        { isCurrentSong ? <Pause color="secondary" /> : <PlayArrow color="secondary" /> }
+                        </IconButton>
+                        <IconButton onClick={handleAddQueue}>
+                            <QueueMusic color="secondary"/>
+                        </IconButton>
                     </CardActions>
                 </div>
-
-            </Card>
-        )
+            </Card>);
     }
 
-    return (
-
+    return(
         <div>
-
-            { data.songs.map((song) => {
-
-                return (<Musica key={song.id} musica={song} />)
+            {data.songs.map((musica) => {
+                return(<Musica key={musica.id} musica={musica} />)
             })}
         </div>
-
     )
-
 }
-
-
-

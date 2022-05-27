@@ -1,15 +1,8 @@
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
 
-export const ADD_SONGS = gql `
-    mutation INSERT_SONG($url: String!, $title: String!, $thumbnail: String!, $duration: Float!, $artist: String!) {
-        insert_songs(objects: {url: $url, 
-            title: $title, 
-            duration: $duration, 
-            thumbnail: $thumbnail, 
-            artist: $artist}) {
-          affected_rows
+export const ADD_SONG = gql`
+    mutation addSong($artist: String!, $duration: Float!, $thumbnail: String!, $title: String!, $url: String!) {
+        insert_songs(objects: {artist: $artist, duration: $duration, thumbnail: $thumbnail, title: $title, url: $url}) {
+            affected_rows
         }
-      }
-`
-
-  
+    }`;
